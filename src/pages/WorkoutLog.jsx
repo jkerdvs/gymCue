@@ -3,17 +3,22 @@ import React, { useEffect, useState, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import ExerciseCard from "../components/ExerciseCard";
 import MiniChart from "../components/MiniChart";
+import ExercisePicker from "../components/ExercisePicker";
 import {
   getWorkouts,
   saveWorkout,
   getExerciseBest,
   getLatestWorkout,
 } from "../lib/storage";
+import {
+  getExercises,
+  ensureSeeded as ensureExerciseBankSeeded,
+} from "../lib/exerciseBank";
 
 /*
 Notes:
 - Templates are persisted in localStorage under "wc_templates".
-- Templates store exercises array (with reps, weight, form) so loading them recreates the sets & forms.
+- Templates store exercises array (with reps, weight, form) so loading them recreate the sets & forms.
 - You can "Save Current Session as Template" or "Save Template as Workout (custom name)".
 */
 
@@ -31,7 +36,7 @@ export default function WorkoutLog() {
   const [seconds, setSeconds] = useState(0);
   const timerRef = useRef(null);
 
-  // exercises: array of { id, name, sets: [{reps, weight, form}], collapsed }
+  // exercises: array of { id, name, sets: [{reps, weight, form}], collapsed, muscleGroup }
   const [exercises, setExercises] = useState([]);
 
   // saved sessions (history)
@@ -40,13 +45,16 @@ export default function WorkoutLog() {
   // PR flash state: {exerciseId: true}
   const [prMap, setPrMap] = useState({});
 
-  // add exercise input
+  // add exercise input (legacy text mode still supported)
   const [newName, setNewName] = useState("");
 
   // templates
   const [templates, setTemplates] = useState([]);
 
-  // load history & templates on mount
+  // exercise bank preview (for UI count)
+  const [bankCount, setBankCount] = useState(0);
+
+  // load history & templates & seed exercise bank on mount
   useEffect(() => {
     setHistory(getWorkouts());
     const raw = localStorage.getItem(TEMPLATES_KEY);
@@ -54,6 +62,15 @@ export default function WorkoutLog() {
       setTemplates(raw ? JSON.parse(raw) : []);
     } catch {
       setTemplates([]);
+    }
+
+    // ensure exercise bank seeded and get count
+    try {
+      ensureExerciseBankSeeded();
+      const b = getExercises();
+      setBankCount(b.length);
+    } catch (err) {
+      console.error("exercise bank seed error", err);
     }
   }, []);
 
@@ -88,6 +105,7 @@ export default function WorkoutLog() {
           ? prefillSets.map((s) => ({ reps: s.reps ?? "", weight: s.weight ?? "", form: s.form ?? 5 }))
           : [],
       collapsed: false,
+      muscleGroup: null,
     };
     setExercises((p) => [...p, ex]);
     setNewName("");
@@ -109,6 +127,32 @@ export default function WorkoutLog() {
       }
     }
     addExercise(suggested);
+  };
+
+  // NEW: add from bank. bankEx contains name, variation, muscleGroup, etc.
+  const addFromBank = (bankEx) => {
+    if (!bankEx) return;
+    // attempt to find last sets by matching name in history (latest first)
+    const all = getWorkouts().slice().reverse();
+    let suggested = [];
+    for (let w of all) {
+      const found = (w.exercises || []).find((e) => (e.name || "").toLowerCase() === (bankEx.name || "").toLowerCase());
+      if (found && found.sets && found.sets.length) {
+        suggested = found.sets.map((s) => ({ reps: s.reps ?? "", weight: s.weight ?? "", form: s.form ?? 5 }));
+        break;
+      }
+    }
+    const ex = {
+      id: uuidv4(),
+      name: bankEx.name,
+      sets: suggested,
+      collapsed: false,
+      muscleGroup: bankEx.muscleGroup || null,
+      equipmentType: bankEx.equipmentType || null,
+      variation: bankEx.variation || null,
+      sourceExerciseId: bankEx.id || null,
+    };
+    setExercises((p) => [...p, ex]);
   };
 
   // Save the whole session; optional customName to store friendly name
@@ -168,6 +212,7 @@ export default function WorkoutLog() {
       name: e.name,
       sets: (e.sets || []).map((s) => ({ reps: s.reps ?? "", weight: s.weight ?? "", form: s.form ?? 5 })),
       collapsed: false,
+      muscleGroup: e.muscleGroup || null,
     }));
     setExercises(cloned);
     setStarted(true);
@@ -287,69 +332,41 @@ export default function WorkoutLog() {
         {/* Add exercise + templates */}
         <div className="bg-gray-50 p-3 rounded-lg shadow-sm space-y-3">
           <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="Exercise name (e.g. Bench Press)"
-              className="flex-1 border rounded px-3 py-2 text-sm bg-white placeholder-gray-400"
-              aria-label="Exercise name"
-            />
+            {/* ExercisePicker replaces manual typing */}
+            <div className="flex-1">
+              <ExercisePicker
+                onSelect={(ex) => addFromBank(ex)}
+                allowCreate={true}
+                placeholder={`Pick an exercise (bank: ${bankCount}) or create new`}
+              />
+            </div>
 
             <div className="flex gap-2">
               <button
-                onClick={addExerciseWithSuggestion}
-                className="px-3 py-2 rounded bg-blue-600 text-white text-sm min-w-[98px]"
-              >
-                + Suggest
-              </button>
-              <button
-                onClick={() => addExercise([])}
+                onClick={() => {
+                  // legacy: add blank entry using typed name (if any)
+                  addExercise([]);
+                }}
                 className="px-3 py-2 rounded bg-gray-200 border text-sm"
               >
                 + Blank
               </button>
-            </div>
-          </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <select
-              onChange={(e) => {
-                if (!e.target.value) return;
-                loadTemplateIntoSession(e.target.value);
-                e.target.selectedIndex = 0; // reset select
-              }}
-              className="w-full sm:w-52 border rounded px-3 py-2 bg-white text-sm"
-              aria-label="Load template"
-            >
-              <option value="">Load Template...</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-
-            <div className="flex gap-2">
               <button
                 onClick={saveCurrentAsTemplate}
                 className="px-3 py-2 rounded bg-purple-600 text-white text-sm"
               >
                 Save as Template
               </button>
+            </div>
+          </div>
 
-              <button
-                onClick={() => {
-                  if (confirm("Open template manager? (This action just shows templates)")) {
-                    // small helper: focus on templates by scrolling into view
-                    const el = document.getElementById("templates-list");
-                    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-                  }
-                }}
-                className="px-3 py-2 rounded border text-sm bg-white"
-                title="Focus templates"
-              >
-                Templates
-              </button>
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <div>Tip: pick from the bank to auto-fill last session data.</div>
+            <div>
+              <a href="/exercise-bank" className="underline">
+                Manage Bank
+              </a>
             </div>
           </div>
         </div>
@@ -414,7 +431,6 @@ export default function WorkoutLog() {
             >
               {/* Main exercise card (takes 2 cols on md+) */}
               <div className="md:col-span-2">
-                {/* Keep original ExerciseCard API intact */}
                 <ExerciseCard
                   exercise={ex}
                   onUpdate={(next) => updateExercise(next)}
@@ -429,7 +445,6 @@ export default function WorkoutLog() {
                 <div className="bg-gray-50 rounded p-2 text-sm">
                   <div className="text-xs text-gray-500">History</div>
                   <div className="mt-2">
-                    {/* MiniChart expects data; we keep using empty array since original passed [] */}
                     <MiniChart data={[]} />
                   </div>
                   <div className="mt-2 text-xs text-gray-700">
@@ -531,4 +546,5 @@ export default function WorkoutLog() {
     </div>
   );
 }
+
 
