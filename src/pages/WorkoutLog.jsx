@@ -247,198 +247,288 @@ export default function WorkoutLog() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-6 text-black">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Workout Session</h1>
-          <div className="text-sm text-gray-500">Create a session with multiple exercises & sets</div>
-        </div>
+    <div className="min-h-screen bg-white text-black">
+      <div className="max-w-3xl mx-auto px-4 py-5 space-y-6">
 
-        <div className="text-right">
-          <div className="text-xs text-gray-500">Duration</div>
-          <div className="text-xl font-mono">{formatTime(seconds)}</div>
-          <div className="mt-2 flex gap-2">
-            <button
-              onClick={() => setStarted((s) => !s)}
-              className={`px-3 py-1 rounded ${started ? "bg-red-600 text-white" : "bg-green-600 text-white"}`}
-            >
-              {started ? "Pause" : "Start"}
-            </button>
-            <button
-              onClick={() => {
-                setStarted(false);
-                setSeconds(0);
-              }}
-              className="px-3 py-1 border rounded"
-            >
-              Reset
-            </button>
+        {/* Header & Timer (mobile-first stacked; desktop: row) */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-lg sm:text-2xl font-semibold">Workout Session</h1>
+            <div className="text-xs text-gray-500 mt-1">Create a session with multiple exercises & sets</div>
           </div>
-        </div>
-      </div>
 
-      {/* Add exercise input + template controls */}
-      <div className="bg-gray-50 p-4 rounded shadow-sm flex flex-col md:flex-row gap-3">
-        <div className="flex gap-3 flex-1">
-          <input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="Exercise name (e.g. Bench Press)"
-            className="flex-1 border p-2 rounded bg-white text-black placeholder-gray-400"
-          />
-          <button onClick={addExerciseWithSuggestion} className="px-4 rounded bg-blue-600 text-white">
-            + Add (suggest last)
-          </button>
-          <button
-            onClick={() => addExercise([])}
-            className="px-4 rounded bg-gray-200 text-black border"
-          >
-            + Add blank
-          </button>
-        </div>
+          <div className="flex flex-col items-start sm:items-end gap-2">
+            <div className="text-xs text-gray-500">Duration</div>
+            <div className="font-mono text-lg">{formatTime(seconds)}</div>
 
-        <div className="flex gap-2 items-center">
-          <select
-            onChange={(e) => {
-              if (!e.target.value) return;
-              loadTemplateIntoSession(e.target.value);
-              e.target.selectedIndex = 0; // reset select
-            }}
-            className="border p-2 rounded bg-white text-black"
-            aria-label="Load template"
-          >
-            <option value="">Load Template...</option>
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-
-          <button
-            onClick={saveCurrentAsTemplate}
-            className="px-3 py-2 rounded bg-purple-600 text-white"
-          >
-            Save as Template
-          </button>
-        </div>
-      </div>
-
-      {/* Templates list (compact) */}
-      {templates.length > 0 && (
-        <div className="bg-white p-3 rounded shadow-sm text-black">
-          <div className="flex items-center justify-between">
-            <div className="font-medium">Saved Templates</div>
-            <div className="text-xs text-gray-500">{templates.length} total</div>
-          </div>
-          <div className="mt-2 space-y-2">
-            {templates.map((t) => (
-              <div
-                key={t.id}
-                className="flex items-center justify-between gap-2 border p-2 rounded"
+            <div className="mt-1 flex w-full sm:w-auto gap-2">
+              <button
+                onClick={() => setStarted((s) => !s)}
+                className={`flex-1 sm:flex-none rounded px-3 py-2 text-sm font-medium ${
+                  started ? "bg-red-600 text-white" : "bg-green-600 text-white"
+                }`}
               >
-                <div>
-                  <div className="font-medium">{t.name}</div>
-                  <div className="text-xs text-gray-500">{(t.exercises || []).length} exercises</div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => loadTemplateIntoSession(t.id)}
-                    className="px-2 py-1 border rounded bg-gray-100"
-                  >
-                    Load
-                  </button>
-                  <button
-                    onClick={() => saveTemplateAsWorkout(t.id)}
-                    className="px-2 py-1 border rounded bg-green-100"
-                  >
-                    Save as Workout
-                  </button>
-                  <button
-                    onClick={() => deleteTemplate(t.id)}
-                    className="px-2 py-1 border rounded text-red-600 bg-red-50"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
+                {started ? "Pause" : "Start"}
+              </button>
+
+              <button
+                onClick={() => {
+                  setStarted(false);
+                  setSeconds(0);
+                }}
+                className="flex-1 sm:flex-none rounded px-3 py-2 text-sm border"
+              >
+                Reset
+              </button>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Exercises list */}
-      <div className="space-y-3">
-        {exercises.length === 0 && <div className="text-sm text-gray-500">No exercises in current session.</div>}
+        {/* Add exercise + templates */}
+        <div className="bg-gray-50 p-3 rounded-lg shadow-sm space-y-3">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Exercise name (e.g. Bench Press)"
+              className="flex-1 border rounded px-3 py-2 text-sm bg-white placeholder-gray-400"
+              aria-label="Exercise name"
+            />
 
-        {exercises.map((ex) => (
-          <div key={ex.id} className="grid grid-cols-3 gap-4 items-start">
-            <div className="col-span-2">
-              <ExerciseCard
-                exercise={ex}
-                onUpdate={(next) => updateExercise(next)}
-                onRemove={removeExercise}
-                suggestedSets={[]}
-                isPR={!!prMap[ex.id]}
-              />
-            </div>
-            <div className="col-span-1">
-              <div className="bg-white p-2 rounded shadow-sm text-black">
-                <div className="text-xs text-gray-500">History</div>
-                <MiniChart data={[]} />
-                <div className="text-sm mt-2 text-gray-700">
-                  Max previously: <strong>{getExerciseBest(ex.name) || 0} lbs</strong>
-                </div>
-              </div>
+            <div className="flex gap-2">
+              <button
+                onClick={addExerciseWithSuggestion}
+                className="px-3 py-2 rounded bg-blue-600 text-white text-sm min-w-[98px]"
+              >
+                + Suggest
+              </button>
+              <button
+                onClick={() => addExercise([])}
+                className="px-3 py-2 rounded bg-gray-200 border text-sm"
+              >
+                + Blank
+              </button>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Actions */}
-      <div className="flex gap-3">
-        <button onClick={() => finishAndSave()} className="bg-green-600 text-white px-4 py-2 rounded shadow">
-          Finish & Save Session
-        </button>
-
-        <button onClick={loadLastSession} className="bg-gray-100 px-4 py-2 rounded border text-black">
-          Load Last Session
-        </button>
-
-        <button
-          onClick={() => {
-            if (!confirm("Clear current unsaved session?")) return;
-            setExercises([]);
-            setSeconds(0);
-            setStarted(false);
-          }}
-          className="bg-red-50 px-3 py-2 rounded text-red-600 border"
-        >
-          Clear Session
-        </button>
-      </div>
-
-      {/* Mini history preview */}
-      <div>
-        <h3 className="text-lg font-semibold mb-2">Recent Sessions</h3>
-        <div className="space-y-2">
-          {history.length === 0 && <div className="text-sm text-gray-500">No sessions yet.</div>}
-          {history.slice(-5).reverse().map((w) => (
-            <div
-              key={w.id}
-              className="bg-white p-3 rounded shadow-sm flex justify-between items-center text-black"
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <select
+              onChange={(e) => {
+                if (!e.target.value) return;
+                loadTemplateIntoSession(e.target.value);
+                e.target.selectedIndex = 0; // reset select
+              }}
+              className="w-full sm:w-52 border rounded px-3 py-2 bg-white text-sm"
+              aria-label="Load template"
             >
-              <div>
-                <div className="font-medium">{w.name || `Workout — ${w.date}`}</div>
-                <div className="text-xs text-gray-500">
-                  {w.exercises.length} exercises • {Math.round((w.durationSeconds || 0) / 60)} min
+              <option value="">Load Template...</option>
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex gap-2">
+              <button
+                onClick={saveCurrentAsTemplate}
+                className="px-3 py-2 rounded bg-purple-600 text-white text-sm"
+              >
+                Save as Template
+              </button>
+
+              <button
+                onClick={() => {
+                  if (confirm("Open template manager? (This action just shows templates)")) {
+                    // small helper: focus on templates by scrolling into view
+                    const el = document.getElementById("templates-list");
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }
+                }}
+                className="px-3 py-2 rounded border text-sm bg-white"
+                title="Focus templates"
+              >
+                Templates
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Compact templates list */}
+        {templates.length > 0 && (
+          <div id="templates-list" className="bg-white p-3 rounded-lg shadow-sm text-black">
+            <div className="flex items-center justify-between">
+              <div className="font-medium text-sm">Saved Templates</div>
+              <div className="text-xs text-gray-500">{templates.length} total</div>
+            </div>
+
+            <div className="mt-2 space-y-2">
+              {templates.map((t) => (
+                <div
+                  key={t.id}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border rounded px-2 py-2"
+                >
+                  <div>
+                    <div className="font-medium text-sm truncate">{t.name}</div>
+                    <div className="text-xs text-gray-500">{(t.exercises || []).length} exercises</div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => loadTemplateIntoSession(t.id)}
+                      className="px-2 py-1 rounded border text-sm bg-gray-50"
+                    >
+                      Load
+                    </button>
+                    <button
+                      onClick={() => saveTemplateAsWorkout(t.id)}
+                      className="px-2 py-1 rounded border text-sm bg-green-50"
+                    >
+                      Save as Workout
+                    </button>
+                    <button
+                      onClick={() => deleteTemplate(t.id)}
+                      className="px-2 py-1 rounded border text-sm text-red-600 bg-red-50"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Exercises list - responsive layout */}
+        <div className="space-y-4">
+          {exercises.length === 0 && (
+            <div className="text-center text-gray-400 text-sm py-6">No exercises in current session.</div>
+          )}
+
+          {exercises.map((ex) => (
+            <div
+              key={ex.id}
+              className={`border rounded-lg p-3 bg-white shadow-sm grid grid-cols-1 md:grid-cols-3 gap-3 items-start ${
+                prMap[ex.id] ? "ring-2 ring-yellow-300" : ""
+              }`}
+            >
+              {/* Main exercise card (takes 2 cols on md+) */}
+              <div className="md:col-span-2">
+                {/* Keep original ExerciseCard API intact */}
+                <ExerciseCard
+                  exercise={ex}
+                  onUpdate={(next) => updateExercise(next)}
+                  onRemove={removeExercise}
+                  suggestedSets={[]}
+                  isPR={!!prMap[ex.id]}
+                />
+              </div>
+
+              {/* Small history / chart column (on mobile it moves below because grid is single-column) */}
+              <div className="md:col-span-1">
+                <div className="bg-gray-50 rounded p-2 text-sm">
+                  <div className="text-xs text-gray-500">History</div>
+                  <div className="mt-2">
+                    {/* MiniChart expects data; we keep using empty array since original passed [] */}
+                    <MiniChart data={[]} />
+                  </div>
+                  <div className="mt-2 text-xs text-gray-700">
+                    Max previously: <strong>{getExerciseBest(ex.name) || 0} lbs</strong>
+                  </div>
                 </div>
               </div>
-              <div className="text-xs text-gray-500">Saved</div>
             </div>
           ))}
+        </div>
+
+        {/* Actions (desktop/tablet) */}
+        <div className="hidden sm:flex gap-3 justify-start">
+          <button
+            onClick={() => finishAndSave()}
+            className="bg-green-600 text-white px-4 py-2 rounded shadow text-sm"
+          >
+            Finish & Save Session
+          </button>
+
+          <button
+            onClick={loadLastSession}
+            className="bg-gray-100 px-4 py-2 rounded border text-sm"
+          >
+            Load Last Session
+          </button>
+
+          <button
+            onClick={() => {
+              if (!confirm("Clear current unsaved session?")) return;
+              setExercises([]);
+              setSeconds(0);
+              setStarted(false);
+            }}
+            className="bg-red-50 px-3 py-2 rounded text-red-600 border text-sm"
+          >
+            Clear Session
+          </button>
+        </div>
+
+        {/* Mini history preview */}
+        <div className="space-y-2">
+          <h3 className="text-base font-medium">Recent Sessions</h3>
+          <div className="space-y-2">
+            {history.length === 0 && <div className="text-sm text-gray-500">No sessions yet.</div>}
+            {history.slice(-5).reverse().map((w) => (
+              <div
+                key={w.id}
+                className="bg-white p-3 rounded-lg shadow-sm flex justify-between items-center text-black"
+              >
+                <div>
+                  <div className="font-medium text-sm">{w.name || `Workout — ${w.date}`}</div>
+                  <div className="text-xs text-gray-500">
+                    {w.exercises.length} exercises • {Math.round((w.durationSeconds || 0) / 60)} min
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500">Saved</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Sticky bottom actions for mobile (one-thumb access) */}
+      <div className="fixed bottom-0 left-0 right-0 p-3 bg-white border-t sm:hidden">
+        <div className="max-w-3xl mx-auto flex gap-2">
+          <button
+            onClick={() => finishAndSave()}
+            className="flex-1 py-3 bg-green-600 text-white rounded text-sm font-medium"
+            aria-label="Finish and save"
+          >
+            Save Workout
+          </button>
+
+          <button
+            onClick={loadLastSession}
+            className="w-20 py-3 bg-gray-100 rounded border text-sm"
+            aria-label="Load last"
+            title="Load last session"
+          >
+            Load
+          </button>
+
+          <button
+            onClick={() => {
+              if (!confirm("Clear current unsaved session?")) return;
+              setExercises([]);
+              setSeconds(0);
+              setStarted(false);
+            }}
+            className="w-20 py-3 bg-red-50 rounded border text-red-600 text-sm"
+            aria-label="Clear session"
+            title="Clear"
+          >
+            Clear
+          </button>
         </div>
       </div>
     </div>
   );
 }
+
