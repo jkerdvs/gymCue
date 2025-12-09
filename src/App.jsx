@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import ProgressPage from "./pages/ProgressPage";
 import WorkoutLog from "./pages/WorkoutLog";
 import CycleDashboard from "./components/ui/Cycle/CycleDashboard";
+import ExerciseBank from "./pages/ExerciseBank";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/progress" element={<ProgressPage />} />
             <Route path="/workout-log" element={<WorkoutLog />} />
             <Route path="/dashboard" element={<CycleDashboard />} />
+            <Route path="/exercise-bank" element={<ExerciseBank />} />
           </Routes>
         </main>
 
