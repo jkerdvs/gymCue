@@ -15,7 +15,7 @@ export default function Navbar() {
   const links = [
     { to: "/", label: "Home" },
     { to: "/progress", label: "Progress" },
-    { to: "/workout-log", label: "Workout Log" },
+    { to: "/workout-log", label: "Lift" },
   ];
 
   return (

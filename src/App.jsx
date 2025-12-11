@@ -6,6 +6,9 @@ import ProgressPage from "./pages/ProgressPage";
 import WorkoutLog from "./pages/WorkoutLog";
 import CycleDashboard from "./components/ui/Cycle/CycleDashboard";
 import ExerciseBank from "./pages/ExerciseBank";
+import TemplatePicker from "./pages/TemplatePicker";
+import SelectWorkoutMode from "./pages/SelectWorkoutMode";
+import WorkoutScreen from "./pages/WorkoutScreen";
 
 export default function App() {
   return (
@@ -22,6 +25,9 @@ export default function App() {
             <Route path="/workout-log" element={<WorkoutLog />} />
             <Route path="/dashboard" element={<CycleDashboard />} />
             <Route path="/exercise-bank" element={<ExerciseBank />} />
+            <Route path="/template-picker" element={<TemplatePicker />} />
+            <Route path="/select-workout-mode" element={<SelectWorkoutMode />} />
+            <Route path="/workout" element={<WorkoutScreen />} />
           </Routes>
         </main>
 

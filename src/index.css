@@ -32,3 +32,12 @@
   animation: scaleIn 0.18s ease-out;
 }
 
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.25s ease-out;
+}
+
