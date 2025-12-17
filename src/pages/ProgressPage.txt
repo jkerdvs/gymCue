@@ -1,7 +1,0 @@
-FIX BLACK BOX. ROBINHOOD GRAPHS.
-
-BUILDING YOUR OWN PHYSICAL STOCK.
-
-git remote add origin https://github.com/jkerdvs/gymcue.git
-git branch -M main
-git push -u origin main

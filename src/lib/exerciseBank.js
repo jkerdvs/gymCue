@@ -1,210 +1,98 @@
 // src/lib/exerciseBank.js
-// Storage helpers for the Exercise Bank (localStorage-backed)
+const STORAGE_KEY = "exerciseBank";
 
-const KEY = "wc_exercises_v1";
-
-/**
- * Default exercises list shipped with the app.
- * Each exercise: { id, name, equipmentType, variation, muscleGroup, userCreated }
- */
-const DEFAULT_EXERCISES = [
-  // Biceps
-  {
-    id: "ex-dumbbell-biceps-curl-standing-hammer",
-    name: "Biceps Curl",
-    equipmentType: "Dumbbell",
-    variation: "Standing",
-    muscleGroup: "Biceps",
-    userCreated: false,
-  },
-  {
-    id: "ex-barbell-biceps-curl-standing",
-    name: "Biceps Curl",
-    equipmentType: "Barbell",
-    variation: "Standing",
-    muscleGroup: "Biceps",
-    userCreated: false,
-  },
-  {
-    id: "ex-dumbbell-biceps-curl-seated-hammer",
-    name: "Biceps Curl",
-    equipmentType: "Dumbbell",
-    variation: "Seated - Hammer",
-    muscleGroup: "Biceps",
-    userCreated: false,
-  },
-
-  // Chest
-  {
-    id: "ex-barbell-bench-press-flat",
-    name: "Bench Press",
-    equipmentType: "Barbell",
-    variation: "Flat",
-    muscleGroup: "Chest",
-    userCreated: false,
-  },
-  {
-    id: "ex-dumbbell-bench-press-incline",
-    name: "Bench Press",
-    equipmentType: "Dumbbell",
-    variation: "Incline",
-    muscleGroup: "Chest",
-    userCreated: false,
-  },
-
-  // Back
-  {
-    id: "ex-barbell-deadlift-conventional",
-    name: "Deadlift",
-    equipmentType: "Barbell",
-    variation: "Conventional",
-    muscleGroup: "Back",
-    userCreated: false,
-  },
-  {
-    id: "ex-barbell-row-bent-over",
-    name: "Bent Over Row",
-    equipmentType: "Barbell",
-    variation: "Bent Over",
-    muscleGroup: "Back",
-    userCreated: false,
-  },
-
-  // Legs
-  {
-    id: "ex-barbell-squat-back",
-    name: "Back Squat",
-    equipmentType: "Barbell",
-    variation: "Back",
-    muscleGroup: "Legs",
-    userCreated: false,
-  },
-  {
-    id: "ex-leg-press-machine",
-    name: "Leg Press",
-    equipmentType: "Machine",
-    variation: "Standard",
-    muscleGroup: "Legs",
-    userCreated: false,
-  },
-
-  // Shoulders
-  {
-    id: "ex-dumbbell-shoulder-press-standing",
-    name: "Shoulder Press",
-    equipmentType: "Dumbbell",
-    variation: "Standing",
-    muscleGroup: "Shoulders",
-    userCreated: false,
-  },
-];
-
-function read() {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) {
-      // seed defaults
-      localStorage.setItem(KEY, JSON.stringify(DEFAULT_EXERCISES));
-      return DEFAULT_EXERCISES.slice();
-    }
-    return JSON.parse(raw);
-  } catch (err) {
-    console.error("exerciseBank read error", err);
-    localStorage.setItem(KEY, JSON.stringify(DEFAULT_EXERCISES));
-    return DEFAULT_EXERCISES.slice();
-  }
-}
-
-function write(next) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(next));
-  } catch (err) {
-    console.error("exerciseBank write error", err);
-  }
-}
-
-/** Public API **/
-
-export function getExercises() {
-  return read();
-}
-
-export function getExerciseById(id) {
-  const all = read();
-  return all.find((e) => e.id === id) || null;
-}
-
-export function saveExercise(ex) {
-  const all = read();
-  const existingIdx = all.findIndex((x) => x.id === ex.id);
-  if (existingIdx >= 0) {
-    all[existingIdx] = { ...all[existingIdx], ...ex };
-  } else {
-    all.unshift(ex);
-  }
-  write(all);
-  return ex;
-}
-
-export function removeExercise(id) {
-  const all = read().filter((e) => e.id !== id);
-  write(all);
-  return all;
-}
-
-/**
- * Find by fuzzy name/equipment/variation. Good for searching.
- * query: string
- */
-export function searchExercises(query) {
-  if (!query) return read();
-  const q = query.toLowerCase();
-  return read().filter((e) => {
-    return (
-      (e.name || "").toLowerCase().includes(q) ||
-      (e.equipmentType || "").toLowerCase().includes(q) ||
-      (e.variation || "").toLowerCase().includes(q) ||
-      (e.muscleGroup || "").toLowerCase().includes(q)
-    );
-  });
-}
-
-/** Utility: ensure defaults exist (used at app start) */
-export function ensureSeeded() {
-  // calling read() will seed defaults if absent
-  read();
-}
-
-/** Helpful lists */
+/* ---------- Exercise Meta ---------- */
 export const EQUIPMENT_TYPES = [
   "Dumbbell",
   "Barbell",
-  "Cable",
   "Machine",
   "Bodyweight",
+  "Cable",
   "Kettlebell",
-  "Other",
 ];
 
 export const MUSCLE_GROUPS = [
   "Chest",
   "Back",
   "Shoulders",
-  "Biceps",
-  "Triceps",
+  "Arms",
   "Legs",
-  "Glutes",
   "Core",
   "Full Body",
-  "Other",
 ];
 
 export const DEFAULT_VARIATIONS = {
-  Dumbbell: ["Standing", "Seated", "Incline", "Hammer", "Reverse", "Neutral"],
-  Barbell: ["Standing", "Back", "Front", "Incline"],
-  Cable: ["Standard", "Single Arm", "Cross"],
+  Dumbbell: ["Standard", "Incline", "Decline"],
+  Barbell: ["Standard", "Incline", "Decline"],
   Machine: ["Standard"],
-  Bodyweight: ["Standard", "Assisted"],
+  Bodyweight: ["Standard"],
+  Cable: ["Standard"],
   Kettlebell: ["Standard"],
-  Other: ["Standard"],
 };
+
+/* ---------- Helpers ---------- */
+function loadBank() {
+  const data = localStorage.getItem(STORAGE_KEY);
+  return data ? JSON.parse(data) : [];
+}
+
+function saveBank(bank) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(bank));
+}
+
+/* ---------- Public API ---------- */
+export function getExercises() {
+  return loadBank();
+}
+
+export function getExerciseById(id) {
+  return loadBank().find((ex) => ex.id === id);
+}
+
+export function createExercise({ name, equipmentType = "Dumbbell", variation = "Standard", muscleGroup = "Chest" }) {
+  const bank = loadBank();
+
+  const newExercise = {
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    equipmentType,
+    variation,
+    muscleGroup,
+    createdAt: Date.now(),
+  };
+
+  bank.push(newExercise);
+  saveBank(bank);
+
+  return newExercise;
+}
+
+export function updateExercise(id, updates) {
+  const bank = loadBank();
+  const index = bank.findIndex((ex) => ex.id === id);
+  if (index === -1) return null;
+
+  bank[index] = { ...bank[index], ...updates };
+  saveBank(bank);
+
+  return bank[index];
+}
+
+export function removeExercise(id) {
+  const bank = loadBank();
+  const updated = bank.filter((ex) => ex.id !== id);
+  saveBank(updated);
+  return updated;
+}
+
+export function searchExercises(query) {
+  const lower = query.toLowerCase();
+  return loadBank().filter(
+    (ex) =>
+      ex.name.toLowerCase().includes(lower) ||
+      ex.muscleGroup.toLowerCase().includes(lower) ||
+      ex.equipmentType.toLowerCase().includes(lower)
+  );
+}
+
+

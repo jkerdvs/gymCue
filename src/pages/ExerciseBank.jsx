@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   getExercises,
-  saveExercise,
+  createExercise,
   removeExercise,
   EQUIPMENT_TYPES,
   MUSCLE_GROUPS,
@@ -49,7 +49,7 @@ export default function ExerciseBank() {
   }, [search, equipmentFilter, muscleFilter, list]);
 
   const handleSaveExercise = (newEx) => {
-    saveExercise(newEx);
+    createExercise(newEx);
     const updated = getExercises();
     setList(updated);
   };

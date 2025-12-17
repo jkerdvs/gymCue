@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import EditExerciseModal from "./EditExerciseModal";
-import { saveExercise } from "../lib/exerciseBank";
+import { createExercise } from "../lib/exerciseBank";
 
 export default function ExerciseAccordion({
   muscle,
@@ -25,7 +25,7 @@ export default function ExerciseAccordion({
   // Toggle favorites
   const toggleFavorite = (ex) => {
     const updated = { ...ex, favorite: !ex.favorite };
-    saveExercise(updated);
+    createExercise(updated);
     refresh();
   };
 
@@ -100,7 +100,7 @@ export default function ExerciseAccordion({
           exercise={editTarget}
           close={() => setEditTarget(null)}
           update={(updated) => {
-            saveExercise(updated);
+            createExercise(updated);
             refresh();
             setEditTarget(null);
           }}

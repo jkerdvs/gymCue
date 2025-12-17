@@ -7,15 +7,20 @@ export default function TemplatePicker() {
   const [templates, setTemplates] = useState([]);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("wc_templates")) || [];
-    setTemplates(stored);
+    const stored = JSON.parse(localStorage.getItem("templates")) || {};
+    const arr = Object.entries(stored).map(([name, data]) => ({ id: name, ...data }));
+    setTemplates(arr);
   }, []);
 
   const handleSelect = (template) => {
+    const stored = JSON.parse(localStorage.getItem("templates")) || {};
+    const workoutData = stored[template.id];
+    if (!workoutData) return alert("Template not found");
+
     navigate("/workout", {
       state: {
-        mode: "template",
-        templateId: template.id,
+        templateName: template.id, // pass name for editing
+        workoutData,
       },
     });
   };
@@ -37,7 +42,7 @@ export default function TemplatePicker() {
             onClick={() => handleSelect(template)}
             className="w-full p-4 bg-gray-800 text-white rounded-xl text-lg shadow active:scale-95"
           >
-            {template.name}
+            {template.id}
           </button>
         ))}
       </div>
@@ -51,3 +56,4 @@ export default function TemplatePicker() {
     </div>
   );
 }
+

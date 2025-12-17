@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { MUSCLE_GROUPS, EQUIPMENT_TYPES } from "../lib/exerciseBank";
+import { MUSCLE_GROUPS, EQUIPMENT_TYPES } from "../lib/exerciseMeta";
 
 export default function EditExerciseModal({ exercise, close, update }) {
   const [name, setName] = useState(exercise.name);

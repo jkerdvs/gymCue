@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 import {
   EQUIPMENT_TYPES,
   MUSCLE_GROUPS,
   DEFAULT_VARIATIONS,
-} from "../lib/exerciseBank";
+} from "../lib/exerciseMeta";
+
 
 export default function AddExerciseModal({ close, save }) {
   const [form, setForm] = useState({
@@ -17,20 +17,19 @@ export default function AddExerciseModal({ close, save }) {
   const variationOptions =
     DEFAULT_VARIATIONS[form.equipmentType] || ["Standard"];
 
-  const handleSubmit = () => {
-    if (!form.name.trim()) return alert("Name required");
+const handleSubmit = () => {
+  if (!form.name.trim()) return alert("Name required");
 
-    save({
-      id: uuidv4(),
-      name: form.name.trim(),
-      equipmentType: form.equipmentType,
-      variation: form.variation || variationOptions[0],
-      muscleGroup: form.muscleGroup,
-      userCreated: true,
-    });
+  save({
+    name: form.name.trim(),
+    equipmentType: form.equipmentType,
+    variation: form.variation || variationOptions[0],
+    muscleGroup: form.muscleGroup,
+  });
 
-    close();
-  };
+  close();
+};
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
