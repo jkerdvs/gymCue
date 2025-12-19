@@ -1,9 +1,4 @@
 import { useState } from "react";
-import {
-  EQUIPMENT_TYPES,
-  MUSCLE_GROUPS,
-  DEFAULT_VARIATIONS,
-} from "../lib/exerciseMeta";
 
 
 export default function AddExerciseModal({ close, save }) {
